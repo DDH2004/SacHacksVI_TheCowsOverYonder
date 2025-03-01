@@ -234,5 +234,21 @@ def update_game_state():
     gameState = request.json
     return jsonify(gameState)
 
+@app.route('/api/advance-day', methods=['POST'])
+def advance_day():
+    global gameState
+    news = generate_news_events(gameState["companies"])
+    updated_companies = update_stock_prices(gameState, news)
+    new_market_trend = calculate_market_trend(updated_companies)
+    updated_portfolio = calculate_portfolio_value(gameState["portfolio"], updated_companies)
+
+    gameState["day"] += 1
+    gameState["companies"] = updated_companies
+    gameState["news"] = (gameState["news"] + news)[-10:]
+    gameState["portfolio"] = updated_portfolio
+    gameState["marketTrend"] = new_market_trend
+
+    return jsonify(gameState)
+
 if __name__ == '__main__':
     app.run(debug=True)
