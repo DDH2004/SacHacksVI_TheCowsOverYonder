@@ -1,5 +1,7 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+import uuid
+import random
 
 app = Flask(__name__)
 CORS(app)
@@ -111,7 +113,79 @@ initialGameState = {
     "isPaused": False
 }
 
+newsTemplates = {
+    "positive": [
+        {"headline": "{company} Reports Record Quarterly Profits", "impact": 0.15},
+        {"headline": "{company} Announces Revolutionary New Product", "impact": 0.2},
+        {"headline": "{company} Expands into New Markets", "impact": 0.1},
+        {"headline": "{company} Exceeds Analyst Expectations", "impact": 0.12},
+        {"headline": "Investors Bullish on {company}'s Future", "impact": 0.08},
+        {"headline": "{company} Secures Major Partnership Deal", "impact": 0.15},
+        {"headline": "{company} Stock Upgraded by Analysts", "impact": 0.1}
+    ],
+    "negative": [
+        {"headline": "{company} Faces Regulatory Investigation", "impact": -0.18},
+        {"headline": "{company} Recalls Defective Products", "impact": -0.15},
+        {"headline": "{company} CEO Steps Down Amid Controversy", "impact": -0.2},
+        {"headline": "{company} Reports Disappointing Earnings", "impact": -0.12},
+        {"headline": "{company} Loses Key Client", "impact": -0.1},
+        {"headline": "Analysts Downgrade {company} Stock", "impact": -0.08},
+        {"headline": "{company} Faces Increased Competition", "impact": -0.1}
+    ],
+    "neutral": [
+        {"headline": "{company} Announces Leadership Restructuring", "impact": 0.03},
+        {"headline": "{company} to Present at Industry Conference", "impact": 0.02},
+        {"headline": "{company} Maintains Current Outlook", "impact": 0.01},
+        {"headline": "{company} Releases Sustainability Report", "impact": 0.02},
+        {"headline": "{company} Updates Corporate Policies", "impact": 0.01}
+    ],
+    'market': [
+        {"headline": "Market Rallies on Economic Data", "impact": 0.05, "isMarketWide": True},
+        {"headline": "Investors Concerned About Inflation", "impact": -0.05, "isMarketWide": True},
+        {"headline": "Central Bank Adjusts Interest Rates", "impact": -0.03, "isMarketWide": True},
+        {"headline": "Economic Growth Exceeds Expectations", "impact": 0.04, "isMarketWide": True},
+        {"headline": "Global Trade Tensions Escalate", "impact": -0.06, "isMarketWide": True}
+    ]
+}
+
 gameState = initialGameState
+
+def generate_news_body(headline):
+    return f"{headline}. Analysts are closely watching how this development will impact the company's financial performance and market position in the coming quarters."
+
+def generate_news_events(companies):
+    MAX_NEWS_PER_DAY = 3
+    news_count = random.randint(1, MAX_NEWS_PER_DAY)
+    news = []
+    if random.random() < 0.2:
+        market_news = random.choice(newsTemplates['market'])
+        news.append({
+            "id": str(uuid.uuid4()),
+            "headline": market_news['headline'],
+            "body": generate_news_body(market_news['headline']),
+            "affectedCompanies": [company['id'] for company in companies],
+            "sentiment": market_news['impact'],
+            "timestamp": int(time.time())
+        })
+    while len(news) < news_count:
+        company = random.choice(companies)
+        sentiment_roll = random.random()
+        if sentiment_roll < 0.33:
+            news_category = random.choice(newsTemplates['positive'])
+        elif sentiment_roll < 0.66:
+            news_category = random.choice(newsTemplates['negative'])
+        else:
+            news_category = random.choice(newsTemplates['neutral'])
+        template = random.choice(newsTemplates[news_category])
+        news.append({
+            "id": str(uuid.uuid4()),
+            "headline": template['headline'].format(company=company['name']),
+            "body": generate_news_body(template['headline'].format(company=company['name'])),
+            "affectedCompanies": [company['id']],
+            "sentiment": template['impact'],
+            "timestamp": int(time.time())
+        })
+    return news
 
 @app.route('/api/gamestate', methods=['GET'])
 def get_game_state():
