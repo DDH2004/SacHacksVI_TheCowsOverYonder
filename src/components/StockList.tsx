@@ -105,6 +105,7 @@ const StockList: React.FC = () => {
                       >
                         Trade
                       </button>
+
                     </td>
                   </tr>
                 );
@@ -140,6 +141,15 @@ const StockList: React.FC = () => {
               >
                 Buy {tradeShares} Shares
               </button>
+              {/* Sell Shares */}
+              <div className="mt-4">
+                <button
+                  onClick={handleSell}
+                  disabled={getOwnedShares(selectedCompany.id) < tradeShares}
+                  className={`w-full mt-2 py-2 bg-red-600 text-white rounded hover:bg-red-700 disabled:bg-gray-300`}
+                >
+                  Sell {tradeShares} Shares
+                </button>
             </div>
 
             {/* Buy using cash */}
@@ -164,6 +174,9 @@ const StockList: React.FC = () => {
                 Buy with Cash
               </button>
             </div>
+
+            </div>
+
           </div>
         ) : (
           <div className="text-center py-8 text-gray-500">
