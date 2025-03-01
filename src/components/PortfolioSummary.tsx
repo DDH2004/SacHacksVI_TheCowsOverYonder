@@ -53,7 +53,7 @@ const PortfolioSummary: React.FC = () => {
         <div className="bg-purple-50 p-4 rounded-lg flex flex-col items-center justify-between">
           <div className="flex items-center text-purple-700 mb-1">
             <BarChart3 size={20} className="mr-2" />
-            <span className="text-sm font-medium">Net Worth</span>
+            <span className="text-sm font-medium">Net&nbsp;Worth</span>
           </div>
           <div className="text-xl font-bold">${totalValue.toFixed(2)}</div>
         </div>
