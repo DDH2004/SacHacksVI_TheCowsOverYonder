@@ -42,23 +42,23 @@ const PortfolioSummary: React.FC = () => {
       <h2 className="text-xl font-bold mb-4">Portfolio Summary</h2>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div className="bg-blue-50 p-4 rounded-lg">
+        <div className="bg-blue-50 p-4 rounded-lg flex flex-col items-center justify-between">
           <div className="flex items-center text-blue-700 mb-1">
             <Wallet size={20} className="mr-2" />
             <span className="text-sm font-medium">Cash</span>
           </div>
-          <div className="text-2xl font-bold">${portfolio.cash.toFixed(2)}</div>
+          <div className="text-xl font-bold">${portfolio.cash.toFixed(2)}</div>
         </div>
         
-        <div className="bg-purple-50 p-4 rounded-lg">
+        <div className="bg-purple-50 p-4 rounded-lg flex flex-col items-center justify-between">
           <div className="flex items-center text-purple-700 mb-1">
             <BarChart3 size={20} className="mr-2" />
-            <span className="text-sm font-medium">Net Worth</span>
+            <span className="text-sm font-medium">Net&nbsp;Worth</span>
           </div>
-          <div className="text-2xl font-bold">${totalValue.toFixed(2)}</div>
+          <div className="text-xl font-bold">${totalValue.toFixed(2)}</div>
         </div>
         
-        <div className={`${profitLoss >= 0 ? 'bg-green-50' : 'bg-red-50'} p-4 rounded-lg`}>
+        <div className={`${profitLoss >= 0 ? 'bg-green-50' : 'bg-red-50'} p-4 rounded-lg flex flex-col items-center justify-between`}>
           <div className={`flex items-center ${profitLoss >= 0 ? 'text-green-700' : 'text-red-700'} mb-1`}>
             {profitLoss >= 0 ? (
               <TrendingUp size={20} className="mr-2" />
@@ -67,7 +67,7 @@ const PortfolioSummary: React.FC = () => {
             )}
             <span className="text-sm font-medium">Profit/Loss</span>
           </div>
-          <div className="text-2xl font-bold">
+          <div className="text-xl font-bold">
             {profitLoss >= 0 ? '+' : ''}${profitLoss.toFixed(2)} ({profitLossPercent.toFixed(2)}%)
           </div>
         </div>
@@ -75,7 +75,7 @@ const PortfolioSummary: React.FC = () => {
       
       <h3 className="text-lg font-semibold mb-2">Holdings</h3>
       {holdingsWithValues.length > 0 ? (
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto max-w-full">
           <table className="min-w-full">
             <thead className="bg-gray-50">
               <tr>

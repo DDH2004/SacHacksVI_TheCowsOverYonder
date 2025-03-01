@@ -7,7 +7,7 @@ interface StockChartProps {
   height?: number;
   showVolume?: boolean;
 }
-
+ 
 const StockChart: React.FC<StockChartProps> = ({
   company,
   width = 300,
