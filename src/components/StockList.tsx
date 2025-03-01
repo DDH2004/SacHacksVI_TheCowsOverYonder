@@ -9,16 +9,33 @@ const StockList: React.FC = () => {
   const { companies, portfolio } = state;
   
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
-  const [tradeShares, setTradeShares] = useState<number>(1);
+  const [tradeShares, setTradeShares] = useState<number>(1); // Buy select amount of stocks
+  const [cashToSpend, setCashToSpend] = useState<string>(''); // Buy using cash values, rounded down
+
   
   const handleCompanySelect = (company: Company) => {
     setSelectedCompany(company);
     setTradeShares(1);
+    setCashToSpend('');
   };
   
-  const handleBuy = () => {
+  // Buy with Stocks
+  const handleBuyWithStocks = () => {
     if (selectedCompany && tradeShares > 0) {
       buyStockShares(selectedCompany.id, tradeShares);
+    }
+  };
+
+  // Buy with Cash
+  const handleBuyWithCash = () => {
+    if (selectedCompany && cashToSpend) {
+      const cash = parseFloat(cashToSpend);
+      if (!isNaN(cash) && cash > 0) {
+        const maxShares = Math.floor(cash / selectedCompany.currentPrice);
+        if (maxShares > 0) {
+          buyStockShares(selectedCompany.id, maxShares);
+        }
+      }
     }
   };
   
@@ -35,6 +52,10 @@ const StockList: React.FC = () => {
   const canAfford = (company: Company, shares: number): boolean => {
     return portfolio.cash >= company.currentPrice * shares;
   };
+
+  const maxSharesForCash = selectedCompany && cashToSpend
+  ? Math.floor(parseFloat(cashToSpend) / selectedCompany.currentPrice) || 0
+  : 0;
   
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -96,81 +117,51 @@ const StockList: React.FC = () => {
       {/* Trade Panel */}
       <div className="bg-white rounded-lg shadow-md p-4">
         <h2 className="text-xl font-bold mb-4">Trade</h2>
-        
+
         {selectedCompany ? (
           <div>
-            <div className="mb-4">
-              <h3 className="text-lg font-semibold">{selectedCompany.name} ({selectedCompany.ticker})</h3>
-              <p className="text-sm text-gray-600">{selectedCompany.description}</p>
-              <div className="mt-2">
-                <StockChart company={selectedCompany} width={280} height={140} />
-              </div>
-              <div className="mt-2 grid grid-cols-2 gap-2">
-                <div className="bg-gray-50 p-2 rounded">
-                  <div className="text-sm text-gray-500">Current Price</div>
-                  <div className="font-bold">${selectedCompany.currentPrice.toFixed(2)}</div>
-                </div>
-                <div className="bg-gray-50 p-2 rounded">
-                  <div className="text-sm text-gray-500">Shares Owned</div>
-                  <div className="font-bold">{getOwnedShares(selectedCompany.id)}</div>
-                </div>
-              </div>
-            </div>
-            
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Number of Shares
-              </label>
-              <div className="flex items-center">
-                <button 
-                  onClick={() => setTradeShares(Math.max(1, tradeShares - 1))}
-                  className="px-3 py-1 bg-gray-200 rounded-l hover:bg-gray-300"
-                >
-                  -
-                </button>
-                <input
-                  type="number"
-                  min="1"
-                  value={tradeShares}
-                  onChange={(e) => setTradeShares(Math.max(1, parseInt(e.target.value) || 0))}
-                  className="w-full text-center py-1 border-t border-b"
-                />
-                <button 
-                  onClick={() => setTradeShares(tradeShares + 1)}
-                  className="px-3 py-1 bg-gray-200 rounded-r hover:bg-gray-300"
-                >
-                  +
-                </button>
-              </div>
-              <div className="mt-1 text-sm text-gray-500">
-                Total: ${(selectedCompany.currentPrice * tradeShares).toFixed(2)}
-              </div>
-            </div>
-            
-            <div className="flex space-x-2">
+            <h3 className="text-lg font-semibold">{selectedCompany.name} ({selectedCompany.ticker})</h3>
+            <p className="text-sm text-gray-600">{selectedCompany.description}</p>
+
+            {/* Buy using shares */}
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-gray-700">Number of Shares</label>
+              <input
+                type="number"
+                min="1"
+                value={tradeShares}
+                onChange={(e) => setTradeShares(Math.max(1, parseInt(e.target.value) || 0))}
+                className="w-full border p-2 rounded mt-1"
+              />
               <button
-                onClick={handleBuy}
-                disabled={!canAfford(selectedCompany, tradeShares)}
-                className={`flex-1 py-2 rounded flex items-center justify-center ${
-                  canAfford(selectedCompany, tradeShares)
-                    ? 'bg-green-600 hover:bg-green-700 text-white'
-                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                }`}
+                onClick={handleBuyWithStocks}
+                disabled={!selectedCompany || !canAfford(selectedCompany, tradeShares)}
+                className="mt-2 w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 disabled:bg-gray-300"
               >
-                <DollarSign size={16} className="mr-1" />
-                Buy
+                Buy {tradeShares} Shares
               </button>
+            </div>
+
+            {/* Buy using cash */}
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-gray-700">Buy with Cash ($)</label>
+              <input
+                type="number"
+                min="0"
+                value={cashToSpend}
+                onChange={(e) => setCashToSpend(e.target.value)}
+                className="w-full border p-2 rounded mt-1"
+              />
+              <p className="text-sm text-gray-500 mt-1">You can buy {maxSharesForCash} shares</p>
               <button
-                onClick={handleSell}
-                disabled={getOwnedShares(selectedCompany.id) < tradeShares}
-                className={`flex-1 py-2 rounded flex items-center justify-center ${
-                  getOwnedShares(selectedCompany.id) >= tradeShares
-                    ? 'bg-red-600 hover:bg-red-700 text-white'
-                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                }`}
-              >
-                <DollarSign size={16} className="mr-1" />
-                Sell
+                  onClick={handleBuyWithCash}
+                  disabled={
+                    maxSharesForCash <= 0 || 
+                    (selectedCompany && parseFloat(cashToSpend) > portfolio.cash)
+                  }
+                  className="mt-2 w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 disabled:bg-gray-300"
+                >
+                Buy with Cash
               </button>
             </div>
           </div>
