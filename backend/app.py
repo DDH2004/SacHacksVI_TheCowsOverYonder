@@ -187,6 +187,43 @@ def generate_news_events(companies):
         })
     return news
 
+def update_stock_prices(game_state, news):
+    BASE_MARKET_FLUCTUATION = 0.02
+    updated_companies = game_state["companies"]
+    market_trend = game_state["marketTrend"] + (random.uniform(-0.1, 0.1))
+    bounded_market_trend = max(-1, min(1, market_trend))
+
+    for company in updated_companies:
+        price_change = (random.uniform(-1, 1)) * BASE_MARKET_FLUCTUATION
+        price_change += bounded_market_trend * 0.01
+
+        for news_item in news:
+            if company["id"] in news_item["affectedCompanies"] or len(news_item["affectedCompanies"]) == len(updated_companies):
+                price_change += news_item["sentiment"] * company["volatility"]
+
+        new_price = company["currentPrice"] * (1 + price_change)
+        company["priceHistory"].append(new_price)
+        company["currentPrice"] = max(0.01, new_price)
+
+    return updated_companies
+
+def calculate_market_trend(companies):
+    total_change = 0
+    for company in companies:
+        history_length = len(company["priceHistory"])
+        if history_length > 1:
+            total_change += (company["priceHistory"][-1] - company["priceHistory"][-2]) / company["priceHistory"][-2]
+    return max(-1, min(1, total_change / len(companies) * 5))
+        
+def calculate_portfolio_value(portfolio, companies):
+    stock_value = 0
+    for company_id, holding in portfolio["holdings"].items():
+        company = next((c for c in companies if c["id"] == company_id), None)
+        if company:
+            stock_value += holding["shares"] * company["currentPrice"]
+    portfolio["netWorth"] = portfolio["cash"] + stock_value
+    return portfolio
+
 @app.route('/api/gamestate', methods=['GET'])
 def get_game_state():
     return jsonify(gameState)
