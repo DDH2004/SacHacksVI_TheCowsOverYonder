@@ -270,7 +270,8 @@ def advance_day():
 
     # Update the game goal and reset the counter every "goal_interval" days
     if gameState["daysUntilGoal"] <= 0:
-        gameState["goalAmount"] += round(500 ** exponent, 2)  # Adjust goal by 500
+        gameState["goalAmount"] += round(500 * (1.25 ** exponent), 2)
+
         exponent += 0.05
         gameState["daysUntilGoal"] = goal_interval  # Reset the goal countdown
 
