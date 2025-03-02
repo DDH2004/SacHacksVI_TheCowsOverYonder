@@ -103,10 +103,10 @@ initialGameState = {
     "companies": initialCompanies,
     "news": [],
     "portfolio": {
-        "cash": 100000,
+        "cash": 10000,
         "holdings": {},
         "transactionHistory": [],
-        "netWorth": 100000
+        "netWorth": 10000
     },
     "leaderboard": [],
     "marketTrend": 0,
