@@ -19,3 +19,4 @@ dist-ssr
 *.sln
 *.sw?
 backend/.venv
+backend/__pycache__
