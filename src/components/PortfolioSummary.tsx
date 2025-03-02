@@ -95,9 +95,9 @@ const PortfolioSummary: React.FC = () => {
                     <div className="text-xs text-gray-500">{holding.name}</div>
                   </td>
                   <td className="px-4 py-2">{holding.shares}</td>
-                  <td className="px-4 py-2">${holding.averagePrice.toFixed(2)}</td>
-                  <td className="px-4 py-2">${holding.currentPrice.toFixed(2)}</td>
-                  <td className="px-4 py-2">${holding.currentValue.toFixed(2)}</td>
+                  <td className="px-4 py-2">${holding.averagePrice?.toFixed(2)}</td>
+                  <td className="px-4 py-2">${holding.currentPrice?.toFixed(2)}</td>
+                  <td className="px-4 py-2">${holding.currentValue?.toFixed(2)}</td>
                   <td className="px-4 py-2">
                     <div className={`flex items-center ${holding.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                       {holding.profit >= 0 ? (
@@ -106,7 +106,7 @@ const PortfolioSummary: React.FC = () => {
                         <TrendingDown size={16} className="mr-1" />
                       )}
                       <span>
-                        {holding.profit >= 0 ? '+' : ''}${holding.profit.toFixed(2)} ({holding.profitPercent.toFixed(2)}%)
+                        {holding.profit >= 0 ? '+' : ''}${holding.profit?.toFixed(2)} ({holding.profitPercent?.toFixed(2)}%)
                       </span>
                     </div>
                   </td>
