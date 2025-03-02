@@ -9,6 +9,7 @@ import StartMenu from './components/StartMenu';
 
 function App() {
   const [isGameStarted, setIsGameStarted] = useState(false);
+  const [volume, setVolume] = useState(1);
   const audioRef = useRef<HTMLAudioElement | null>(null); 
 
   const handleStartGame = () => {
@@ -19,12 +20,12 @@ function App() {
     setIsGameStarted(false); // Return to Start Menu
   };
 
-// Automatically start the music when the game starts
-useEffect(() => {
-  if (isGameStarted && audioRef.current) {
-    audioRef.current.play(); // Start playing music
-  }
-}, [isGameStarted]);
+  // Automatically start the music when the game starts
+  useEffect(() => {
+    if (isGameStarted && audioRef.current) {
+      audioRef.current.play(); // Start playing music
+    }
+  }, [isGameStarted]);
 
   // Pause music when game is not started
   useEffect(() => {
@@ -32,6 +33,13 @@ useEffect(() => {
       audioRef.current.pause(); // Pause music
     }
   }, [isGameStarted]);
+
+  // Update volume when the user adjusts the slider
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = volume; // Set volume
+    }
+  }, [volume]);
 
   if (!isGameStarted) {
     return <StartMenu onStart={handleStartGame} />;
@@ -71,9 +79,24 @@ useEffect(() => {
         <audio
           ref={audioRef}
           loop
-          src="/bg_music.mp4"
+          src="/bg_music.mp3"
           preload="auto"
         />
+
+        {/* Volume Control */}
+        <div className="absolute bottom-4 right-4 bg-gray-800 text-white p-4 rounded-lg shadow-md">
+          <label htmlFor="volume-slider" className="text-sm">Volume</label>
+          <input
+            id="volume-slider"
+            type="range"
+            min="0"
+            max="1"
+            step="0.01"
+            value={volume}
+            onChange={(e) => setVolume(parseFloat(e.target.value))}
+            className="ml-2"
+          />
+        </div>
       </div>
     </GameProvider>
   );
