@@ -146,6 +146,7 @@ export const advanceGameDay = (gameState: GameState): GameState => {
   return {
     ...gameState,
     day: gameState.day + 1,
+    daysUntilGoal: gameState.daysUntilGoal - 1,
     companies: updatedCompanies,
     news: [...gameState.news, ...news].slice(-10), // Keep only the 10 most recent news items
     portfolio: updatedPortfolio,

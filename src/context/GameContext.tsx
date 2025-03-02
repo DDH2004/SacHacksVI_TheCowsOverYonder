@@ -27,6 +27,17 @@ const GameContext = createContext<GameContextType | undefined>(undefined);
 const gameReducer = (state: GameState, action: GameAction): GameState => {
   switch (action.type) {
     case 'ADVANCE_DAY':
+      // Check if the player has won or lost
+      const totalPortfolioValue = state.portfolio.netWorth;
+
+      if (totalPortfolioValue >= state.goalAmount) {
+        alert('Congratulations! You reached your goal!');
+
+      } else if (state.daysUntilGoal - 1 <= 0) {
+        alert('You ran out of time! Better luck next time.');
+
+      }
+
       return advanceGameDay(state);
     case 'BUY_STOCK': {
       const company = state.companies.find((c) => c.id === action.companyId);
