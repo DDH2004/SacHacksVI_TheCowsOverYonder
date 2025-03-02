@@ -196,9 +196,8 @@ initialGameState = {
     },
     "leaderboard": [],
     "marketTrend": 0,
-    "gameSpeed": 'normal',
-    "isPaused": False,
     "goalAmount": 10500.00,         #(set initial goal)
+    "showResult": False,
     "daysUntilGoal": goal_interval  #(initially set to goal_interval days)
 }
 
@@ -270,8 +269,9 @@ def advance_day():
 
     # Update the game goal and reset the counter every "goal_interval" days
     if gameState["daysUntilGoal"] <= 0:
+        gameState["showResult"] = True
+        print(gameState["showResult"])
         gameState["goalAmount"] += round(500 * (1.25 ** exponent), 2)
-
         exponent += 0.05
         gameState["daysUntilGoal"] = goal_interval  # Reset the goal countdown
 

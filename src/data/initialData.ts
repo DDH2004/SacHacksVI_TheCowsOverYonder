@@ -95,6 +95,7 @@ export const initialGameState: GameState = {
   day: 1,
   daysUntilGoal: 14, // Start with 14 days
   goalAmount: 10500, // Starting cash ($10000) + $500 profit goal
+  showResult: false,
   companies: initialCompanies,
   news: [],
   portfolio: {
@@ -105,6 +106,4 @@ export const initialGameState: GameState = {
   },
   leaderboard: [],
   marketTrend: 0,
-  gameSpeed: 'normal',
-  isPaused: false
 };

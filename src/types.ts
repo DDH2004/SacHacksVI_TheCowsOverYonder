@@ -46,13 +46,12 @@ export interface GameState {
   day: number;
   daysUntilGoal: number; // New variable
   goalAmount: number; // New variable
+  showResult: boolean;
   companies: Company[];
   news: NewsEvent[];
   portfolio: Portfolio;
   leaderboard: LeaderboardEntry[];
-  marketTrend: number; // -1 to 1 scale, bearish to bullish
-  gameSpeed: 'slow' | 'normal' | 'fast';
-  isPaused: boolean;
+  marketTrend: number; // -1 to 1 scale, bearish to bullish  
 }
 
 export interface LeaderboardEntry {
