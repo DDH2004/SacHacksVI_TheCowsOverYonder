@@ -70,18 +70,24 @@ const StockList: React.FC = () => {
                 <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
                 <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Change</th>
                 <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Chart</th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {companies.map(company => {
+              {companies.map((company) => {
                 const priceHistory = company.priceHistory;
-                const previousPrice = priceHistory.length > 1 ? priceHistory[priceHistory.length - 2] : company.initialPrice;
+                const previousPrice =
+                  priceHistory.length > 1
+                    ? priceHistory[priceHistory.length - 2]
+                    : company.initialPrice;
                 const priceChange = company.currentPrice - previousPrice;
                 const percentChange = (priceChange / previousPrice) * 100;
-                
+
                 return (
-                  <tr key={company.id} className="hover:bg-gray-50">
+                  <tr
+                    key={company.id}
+                    className="hover:bg-gray-50 cursor-pointer"
+                    onClick={() => handleCompanySelect(company)} // Make the row clickable
+                  >
                     <td className="px-4 py-2">
                       <div>
                         <div className="font-medium">{company.ticker}</div>
@@ -90,23 +96,23 @@ const StockList: React.FC = () => {
                     </td>
                     <td className="px-4 py-2 font-medium">${company.currentPrice.toFixed(2)}</td>
                     <td className="px-4 py-2">
-                      <div className={`flex items-center ${priceChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        {priceChange >= 0 ? <TrendingUp size={16} className="mr-1" /> : <TrendingDown size={16} className="mr-1" />}
+                      <div
+                        className={`flex items-center ${
+                          priceChange >= 0 ? 'text-green-600' : 'text-red-600'
+                        }`}
+                      >
+                        {priceChange >= 0 ? (
+                          <TrendingUp size={16} className="mr-1" />
+                        ) : (
+                          <TrendingDown size={16} className="mr-1" />
+                        )}
                         <span>{percentChange.toFixed(2)}%</span>
                       </div>
                     </td>
                     <td className="px-4 py-2">
                       <StockChart company={company} width={120} height={60} />
                     </td>
-                    <td className="px-4 py-2">
-                      <button 
-                        onClick={() => handleCompanySelect(company)}
-                        className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-                      >
-                        Trade
-                      </button>
-
-                    </td>
+                    {/* Remove the Trade button */}
                   </tr>
                 );
               })}
