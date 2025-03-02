@@ -117,7 +117,9 @@ initialGameState = {
     "leaderboard": [],
     "marketTrend": 0,
     "gameSpeed": 'normal',
-    "isPaused": False
+    "isPaused": False,
+    "goalAmount": 10500.00,  #(set initial goal)
+    "daysUntilGoal": 5       #(initially set to 5 days can change)
 }
 
 newsTemplates = {
@@ -255,6 +257,14 @@ def advance_day():
     gameState["news"] = (gameState["news"] + news)[-10:]
     gameState["portfolio"] = updated_portfolio
     gameState["marketTrend"] = new_market_trend
+
+    # Update the game goal and reset the counter every 5 days
+    if gameState["day"] % 5 == 0:
+        gameState["goalAmount"] += 500  # Adjust goal by 500
+        gameState["daysUntilGoal"] = 5  # Reset the goal countdown
+
+    # Decrease days until goal
+    gameState["daysUntilGoal"] -= 1
 
     return jsonify(gameState)
 
