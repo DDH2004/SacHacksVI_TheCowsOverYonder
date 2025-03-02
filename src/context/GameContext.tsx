@@ -86,6 +86,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode; resetToMenu: ()
     axios.post('/api/reset')
       .then(response => {
         dispatch({ type: 'SET_GAME_STATE', gameState: response.data });
+        console.log(response.data);
         resetToMenu(); // Trigger return to Start Menu
       })
       .catch(error => console.error('Error resetting game:', error));

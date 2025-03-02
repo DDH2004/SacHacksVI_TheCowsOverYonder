@@ -3,6 +3,7 @@ from flask_cors import CORS
 import uuid
 import random
 import time
+import copy
 import requests
 import os
 
@@ -154,7 +155,7 @@ newsTemplates = {
     ]
 }
 
-gameState = initialGameState
+gameState = copy.deepcopy(initialGameState)
 
 def generate_news_body(headline):
     return f"{headline}. Analysts are closely watching how this development will impact the company's financial performance and market position in the coming quarters."
@@ -307,8 +308,8 @@ def sell_stock():
 @app.route('/api/reset', methods=['POST'])
 def reset_game():
     global gameState
-    gameState = initialGameState
-    return jsonify(gameState)
+    gameState = copy.deepcopy(initialGameState)
+    return jsonify(initialGameState)
 
 if __name__ == '__main__':
     print(f"{gemini_api_key}")
