@@ -1,13 +1,12 @@
-import React, { createContext, useContext, useReducer, useEffect } from 'react';
-import axios from 'axios';
-import { GameState, Company, NewsEvent, Portfolio } from '../types';
+import React, { createContext, useContext, useReducer } from 'react';
+import { GameState } from '../types';
 import { initialGameState } from '../data/initialData';
 
 // Define action types
 type GameAction =
-  | { type: 'SET_GAME_STATE'; gameState: GameState }
-  | { type: 'SET_GAME_SPEED'; speed: GameState['gameSpeed'] }
-  | { type: 'TOGGLE_PAUSE' }
+  | { type: 'ADVANCE_DAY' }
+  | { type: 'BUY_STOCK'; companyId: string; shares: number }
+  | { type: 'SELL_STOCK'; companyId: string; shares: number }
   | { type: 'RESET_GAME' };
 
 // Create context
@@ -17,8 +16,6 @@ interface GameContextType {
   buyStockShares: (companyId: string, shares: number) => void;
   sellStockShares: (companyId: string, shares: number) => void;
   advanceDay: () => void;
-  setGameSpeed: (speed: GameState['gameSpeed']) => void;
-  togglePause: () => void;
   resetGame: () => void;
 }
 
@@ -27,18 +24,43 @@ const GameContext = createContext<GameContextType | undefined>(undefined);
 // Reducer function
 const gameReducer = (state: GameState, action: GameAction): GameState => {
   switch (action.type) {
-    case 'SET_GAME_STATE':
-      return action.gameState;
-    case 'SET_GAME_SPEED':
+    case 'ADVANCE_DAY':
+      // Check if the player has won or lost
+      const totalPortfolioValue = state.portfolio.netWorth;
+
+      if (totalPortfolioValue >= state.goalAmount) {
+        alert('Congratulations! You reached your goal!');
+
+      } else if (state.daysUntilGoal - 1 <= 0) {
+        alert('You ran out of time! Better luck next time.');
+
+      }
+
+      return advanceGameDay(state);
+    case 'BUY_STOCK': {
+      const company = state.companies.find((c) => c.id === action.companyId);
+      if (!company) return state;
+
+      const result = buyStock(state.portfolio, company, action.shares);
+      if (!result.success) return state;
+
       return {
         ...state,
-        gameSpeed: action.speed
+        portfolio: result.portfolio,
       };
-    case 'TOGGLE_PAUSE':
+    }
+    case 'SELL_STOCK': {
+      const company = state.companies.find((c) => c.id === action.companyId);
+      if (!company) return state;
+
+      const result = sellStock(state.portfolio, company, action.shares);
+      if (!result.success) return state;
+
       return {
         ...state,
-        isPaused: !state.isPaused
+        portfolio: result.portfolio,
       };
+    }
     case 'RESET_GAME':
       return initialGameState;
     default:
@@ -47,46 +69,12 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
 };
 
 // Provider component
-export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const GameProvider: React.FC<{ children: React.ReactNode; resetToMenu: () => void }> = ({
+  children,
+  resetToMenu,
+}) => {
   const [state, dispatch] = useReducer(gameReducer, initialGameState);
 
-  // Fetch initial game state from backend
-  useEffect(() => {
-    axios.get('/api/gamestate')
-      .then(response => {
-        dispatch({ type: 'SET_GAME_STATE', gameState: response.data });
-      })
-      .catch(error => console.error('Error fetching game state:', error));
-  }, []);
-
-  // Game loop for automatic day advancement
-  useEffect(() => {
-    if (state.isPaused) return;
-
-    let interval: number;
-
-    switch (state.gameSpeed) {
-      case 'slow':
-        interval = 10000; // 10 seconds
-        break;
-      case 'normal':
-        interval = 5000; // 5 seconds
-        break;
-      case 'fast':
-        interval = 2000; // 2 seconds
-        break;
-      default:
-        interval = 5000;
-    }
-
-    const timer = setInterval(() => {
-      advanceDay();
-    }, interval);
-
-    return () => clearInterval(timer);
-  }, [state.gameSpeed, state.isPaused]);
-
-  // Helper functions
   const buyStockShares = (companyId: string, shares: number) => {
     axios.post('/api/buy', { companyId, shares })
       .then(response => {
@@ -111,20 +99,9 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       .catch(error => console.error('Error advancing day:', error));
   };
 
-  const setGameSpeed = (speed: GameState['gameSpeed']) => {
-    dispatch({ type: 'SET_GAME_SPEED', speed });
-  };
-
-  const togglePause = () => {
-    dispatch({ type: 'TOGGLE_PAUSE' });
-  };
-
   const resetGame = () => {
-    axios.post('/api/reset')
-      .then(response => {
-        dispatch({ type: 'SET_GAME_STATE', gameState: response.data });
-      })
-      .catch(error => console.error('Error resetting game:', error));
+    dispatch({ type: 'RESET_GAME' });
+    resetToMenu(); // Trigger return to Start Menu
   };
 
   return (
@@ -135,9 +112,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         buyStockShares,
         sellStockShares,
         advanceDay,
-        setGameSpeed,
-        togglePause,
-        resetGame
+        resetGame,
       }}
     >
       {children}

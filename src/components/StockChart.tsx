@@ -7,7 +7,7 @@ interface StockChartProps {
   height?: number;
   showVolume?: boolean;
 }
- 
+
 const StockChart: React.FC<StockChartProps> = ({
   company,
   width = 300,
@@ -23,7 +23,7 @@ const StockChart: React.FC<StockChartProps> = ({
         className="flex items-center justify-center bg-gray-100 rounded"
         style={{ width, height }}
       >
-        <p className="text-gray-500">Not enough data</p>
+        <p className="text-gray-500">No Data</p>
       </div>
     );
   }
