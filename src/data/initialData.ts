@@ -93,6 +93,8 @@ export const initialCompanies: Company[] = [
 
 export const initialGameState: GameState = {
   day: 1,
+  daysUntilGoal: 30, // Start with 30 days
+  goalAmount: 10500, // Starting cash ($10000) + $500 profit goal
   companies: initialCompanies,
   news: [],
   portfolio: {

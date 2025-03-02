@@ -26,6 +26,30 @@ const StockList: React.FC = () => {
     }
   };
 
+  const handleBuyAll = () => {
+    if (selectedCompany) {
+      const maxShares = Math.floor(portfolio.cash / selectedCompany.currentPrice);
+      if (maxShares > 0) {
+        buyStockShares(selectedCompany.id, maxShares);
+      }
+    }
+  };  
+
+  const handleSell = () => {
+    if (selectedCompany && tradeShares > 0) {
+      sellStockShares(selectedCompany.id, tradeShares);
+    }
+  };
+
+  const handleSellAll = () => {
+    if (selectedCompany) {
+      const ownedShares = getOwnedShares(selectedCompany.id);
+      if (ownedShares > 0) {
+        sellStockShares(selectedCompany.id, ownedShares);
+      }
+    }
+  };  
+
   // Buy with Cash
   const handleBuyWithCash = () => {
     if (selectedCompany && cashToSpend) {
@@ -36,12 +60,6 @@ const StockList: React.FC = () => {
           buyStockShares(selectedCompany.id, maxShares);
         }
       }
-    }
-  };
-  
-  const handleSell = () => {
-    if (selectedCompany && tradeShares > 0) {
-      sellStockShares(selectedCompany.id, tradeShares);
     }
   };
   
@@ -127,7 +145,9 @@ const StockList: React.FC = () => {
 
         {selectedCompany ? (
           <div>
-            <h3 className="text-lg font-semibold">{selectedCompany.name} ({selectedCompany.ticker})</h3>
+            <h3 className="text-lg font-semibold">
+              {selectedCompany.name} ({selectedCompany.ticker})
+            </h3>
             <p className="text-sm text-gray-600">{selectedCompany.description}</p>
 
             {/* Buy using shares */}
@@ -147,6 +167,14 @@ const StockList: React.FC = () => {
               >
                 Buy {tradeShares} Shares
               </button>
+              {/* Buy All Button */}
+              <button
+                onClick={() => handleBuyAll()}
+                disabled={!selectedCompany || portfolio.cash < selectedCompany.currentPrice}
+                className="mt-2 w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 disabled:bg-gray-300"
+              >
+                Buy All Shares ({selectedCompany ? Math.floor(portfolio.cash / selectedCompany.currentPrice) : 0})
+              </button>
               {/* Sell Shares */}
               <div className="mt-4">
                 <button
@@ -156,20 +184,28 @@ const StockList: React.FC = () => {
                 >
                   Sell {tradeShares} Shares
                 </button>
-            </div>
+                {/* Sell All Button */}
+                <button
+                    onClick={() => handleSellAll()}
+                    disabled={!selectedCompany || getOwnedShares(selectedCompany.id) === 0}
+                    className={`w-full mt-2 py-2 bg-red-600 text-white rounded hover:bg-red-700 disabled:bg-gray-300`}
+                  >
+                    Sell All Shares ({getOwnedShares(selectedCompany?.id || '')})
+                </button>
+              </div>
 
-            {/* Buy using cash */}
-            <div className="mt-4">
-              <label className="block text-sm font-medium text-gray-700">Buy with Cash ($)</label>
-              <input
-                type="number"
-                min="0"
-                value={cashToSpend}
-                onChange={(e) => setCashToSpend(e.target.value)}
-                className="w-full border p-2 rounded mt-1"
-              />
-              <p className="text-sm text-gray-500 mt-1">You can buy {maxSharesForCash} shares</p>
-              <button
+              {/* Buy using cash */}
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-gray-700">Buy with Cash ($)</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={cashToSpend}
+                  onChange={(e) => setCashToSpend(e.target.value)}
+                  className="w-full border p-2 rounded mt-1"
+                />
+                <p className="text-sm text-gray-500 mt-1">You can buy {maxSharesForCash} shares</p>
+                <button
                   onClick={handleBuyWithCash}
                   disabled={
                     maxSharesForCash <= 0 || 
@@ -177,17 +213,13 @@ const StockList: React.FC = () => {
                   }
                   className="mt-2 w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 disabled:bg-gray-300"
                 >
-                Buy with Cash
-              </button>
+                  Buy with Cash
+                </button>
+              </div>
             </div>
-
-            </div>
-
           </div>
         ) : (
-          <div className="text-center py-8 text-gray-500">
-            Select a stock to trade
-          </div>
+          <div className="text-center py-8 text-gray-500">Select a stock to trade</div>
         )}
       </div>
     </div>

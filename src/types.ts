@@ -44,6 +44,8 @@ export interface Transaction {
 
 export interface GameState {
   day: number;
+  daysUntilGoal: number; // New variable
+  goalAmount: number; // New variable
   companies: Company[];
   news: NewsEvent[];
   portfolio: Portfolio;
