@@ -6,6 +6,7 @@ import NewsPanel from './components/NewsPanel';
 import GameControls from './components/GameControls';
 import MarketOverview from './components/MarketOverview';
 import StartMenu from './components/StartMenu';
+import { Volume, Volume1Icon, Volume2Icon, VolumeXIcon } from 'lucide-react';
 
 function App() {
   const [isGameStarted, setIsGameStarted] = useState(false);
@@ -84,8 +85,13 @@ function App() {
         />
 
         {/* Volume Control */}
-        <div className="absolute bottom-4 right-4 bg-gray-800 text-white p-4 rounded-lg shadow-md">
-          <label htmlFor="volume-slider" className="text-sm">Volume</label>
+        <div className="fixed flex bottom-4 right-4 bg-gray-800 text-white p-4 rounded-lg shadow-md">
+          <>
+            {volume == 0.00 && <VolumeXIcon size={20} className="mr-2"/>}
+            {volume > 0.00 && volume <= 0.33 && <Volume size={20} className="mr-2"/>}
+            {volume > 0.33 && volume <= 0.66 && <Volume1Icon size={20} className="mr-2"/>}
+            {volume > 0.66 && volume <= 1 && <Volume2Icon size={20} className="mr-2"/>}
+          </>
           <input
             id="volume-slider"
             type="range"

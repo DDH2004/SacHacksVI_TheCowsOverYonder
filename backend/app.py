@@ -107,24 +107,6 @@ initialCompanies = [
     }
 ]
 
-initialGameState = {
-    "day": 1,
-    "companies": initialCompanies,
-    "news": [],
-    "portfolio": {
-        "cash": 10000,
-        "holdings": {},
-        "transactionHistory": [],
-        "netWorth": 10000
-    },
-    "leaderboard": [],
-    "marketTrend": 0,
-    "gameSpeed": 'normal',
-    "isPaused": False,
-    "goalAmount": 10500.00,         #(set initial goal)
-    "daysUntilGoal": goal_interval  #(initially set to goal_interval days)
-}
-
 newsTemplates = {
     "positive": [
         {"headline": "{company} Reports Record Quarterly Profits", "impact": 0.15},
@@ -160,8 +142,6 @@ newsTemplates = {
     ]
 }
 
-gameState = copy.deepcopy(initialGameState)
-
 def generate_news_body(headline):
     return f"{headline}. Analysts are closely watching how this development will impact the company's financial performance and market position in the coming quarters."
 
@@ -169,6 +149,8 @@ def generate_news_events(companies):
     MAX_NEWS_PER_DAY = 3
     news_count = random.randint(1, MAX_NEWS_PER_DAY)
     news = []
+
+    #20% chance of market event occuring
     if random.random() < 0.2:
         market_news = random.choice(newsTemplates['market'])
         news.append({
@@ -179,6 +161,7 @@ def generate_news_events(companies):
             "sentiment": market_news['impact'],
             "timestamp": int(time.time())
         })
+    #generate 1-3 news
     while len(news) < news_count:
         company = random.choice(companies)
         sentiment_roll = random.random()
@@ -199,6 +182,27 @@ def generate_news_events(companies):
             "timestamp": int(time.time())
         })
     return news
+
+initialGameState = {
+    "day": 0,
+    "companies": initialCompanies,
+    "news": [],
+    "nextDayNews": generate_news_events(initialCompanies),
+    "portfolio": {
+        "cash": 10000,
+        "holdings": {},
+        "transactionHistory": [],
+        "netWorth": 10000
+    },
+    "leaderboard": [],
+    "marketTrend": 0,
+    "gameSpeed": 'normal',
+    "isPaused": False,
+    "goalAmount": 10500.00,         #(set initial goal)
+    "daysUntilGoal": goal_interval  #(initially set to goal_interval days)
+}
+
+gameState = copy.deepcopy(initialGameState)
 
 def update_stock_prices(game_state, news):
     BASE_MARKET_FLUCTUATION = 0.02
@@ -249,7 +253,7 @@ def update_game_state():
 
 @app.route('/api/advance-day', methods=['POST'])
 def advance_day():
-    global gameState, exponent
+    global gameState, exponent, goal_interval
     news = generate_news_events(gameState["companies"])
     updated_companies = update_stock_prices(gameState, news)
     new_market_trend = calculate_market_trend(updated_companies)
