@@ -249,7 +249,7 @@ def update_game_state():
 
 @app.route('/api/advance-day', methods=['POST'])
 def advance_day():
-    global gameState
+    global gameState, exponent
     news = generate_news_events(gameState["companies"])
     updated_companies = update_stock_prices(gameState, news)
     new_market_trend = calculate_market_trend(updated_companies)
@@ -265,8 +265,8 @@ def advance_day():
     gameState["daysUntilGoal"] -= 1
 
     # Update the game goal and reset the counter every "goal_interval" days
-    if gameState["day"] % goal_interval == 0:
-        gameState["goalAmount"] += 500 ** exponent  # Adjust goal by 500
+    if gameState["daysUntilGoal"] <= 0:
+        gameState["goalAmount"] += round(500 ** exponent, 2)  # Adjust goal by 500
         exponent += 0.05
         gameState["daysUntilGoal"] = goal_interval  # Reset the goal countdown
 
