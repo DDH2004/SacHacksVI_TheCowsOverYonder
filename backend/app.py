@@ -13,6 +13,9 @@ CORS(app)
 # Access the Gemini API key from the environment variable
 gemini_api_key = os.getenv('GEMINI_API_KEY')
 
+goal_interval = 14
+exponent = 0
+
 initialCompanies = [
     {
         "id": 'tech-1',
@@ -118,8 +121,8 @@ initialGameState = {
     "marketTrend": 0,
     "gameSpeed": 'normal',
     "isPaused": False,
-    "goalAmount": 10500.00,  #(set initial goal)
-    "daysUntilGoal": 5       #(initially set to 5 days can change)
+    "goalAmount": 10500.00,         #(set initial goal)
+    "daysUntilGoal": goal_interval  #(initially set to goal_interval days)
 }
 
 newsTemplates = {
@@ -258,13 +261,14 @@ def advance_day():
     gameState["portfolio"] = updated_portfolio
     gameState["marketTrend"] = new_market_trend
 
-    # Update the game goal and reset the counter every 5 days
-    if gameState["day"] % 5 == 0:
-        gameState["goalAmount"] += 500  # Adjust goal by 500
-        gameState["daysUntilGoal"] = 5  # Reset the goal countdown
-
     # Decrease days until goal
     gameState["daysUntilGoal"] -= 1
+
+    # Update the game goal and reset the counter every "goal_interval" days
+    if gameState["day"] % goal_interval == 0:
+        gameState["goalAmount"] += 500 ** exponent  # Adjust goal by 500
+        exponent += 0.05
+        gameState["daysUntilGoal"] = goal_interval  # Reset the goal countdown
 
     return jsonify(gameState)
 
