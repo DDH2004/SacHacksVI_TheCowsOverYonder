@@ -172,11 +172,12 @@ def generate_news_events(companies):
         company = random.choice(companies)
         sentiment_roll = random.random()
         if sentiment_roll < 0.33:
-            news_category = random.choice(newsTemplates['positive'])
+            news_category = 'positive'
         elif sentiment_roll < 0.66:
-            news_category = random.choice(newsTemplates['negative'])
+            news_category = 'negative'
         else:
-            news_category = random.choice(newsTemplates['neutral'])
+            news_category = 'neutral'
+        
         template = random.choice(newsTemplates[news_category])
         news.append({
             "id": str(uuid.uuid4()),
