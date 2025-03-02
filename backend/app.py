@@ -183,7 +183,7 @@ def generate_news_events(companies):
             news_category = 'negative'
         else:
             news_category = 'neutral'
-        
+         
         template = random.choice(newsTemplates[news_category])
         news.append({
             "id": str(uuid.uuid4()),
