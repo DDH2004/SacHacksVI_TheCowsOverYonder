@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { GameProvider } from './context/GameContext';
 import StockList from './components/StockList';
 import PortfolioSummary from './components/PortfolioSummary';
@@ -9,6 +9,7 @@ import StartMenu from './components/StartMenu';
 
 function App() {
   const [isGameStarted, setIsGameStarted] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null); 
 
   const handleStartGame = () => {
     setIsGameStarted(true); // Start the game
@@ -17,6 +18,20 @@ function App() {
   const handleResetToMenu = () => {
     setIsGameStarted(false); // Return to Start Menu
   };
+
+// Automatically start the music when the game starts
+useEffect(() => {
+  if (isGameStarted && audioRef.current) {
+    audioRef.current.play(); // Start playing music
+  }
+}, [isGameStarted]);
+
+  // Pause music when game is not started
+  useEffect(() => {
+    if (!isGameStarted && audioRef.current) {
+      audioRef.current.pause(); // Pause music
+    }
+  }, [isGameStarted]);
 
   if (!isGameStarted) {
     return <StartMenu onStart={handleStartGame} />;
@@ -51,6 +66,14 @@ function App() {
             Market Mayhem &copy; 2025
           </div>
         </footer>
+
+        {/* Background Music */}
+        <audio
+          ref={audioRef}
+          loop
+          src="/bg_music.mp4"
+          preload="auto"
+        />
       </div>
     </GameProvider>
   );
