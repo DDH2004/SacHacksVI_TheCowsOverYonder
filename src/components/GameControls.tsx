@@ -47,24 +47,16 @@ const GameControls: React.FC = () => {
       </div>
 
       {/* Days Until Goal */}
-      <div className="flex items-center justify-between">
-        <div className="text-sm text-gray-600">Days Until Goal:</div>
+      <div className="flex items-center">
+        <div className="text-sm text-gray-600">Days Until Goal:&nbsp;</div>
         <div className="text-sm font-bold text-gray-800">{daysUntilGoal}</div>
       </div>
 
       {/* Goal Amount */}
-      <div className="flex items-center justify-between mt-4">
-        <div className="text-sm text-gray-600">Goal Amount:</div>
+      <div className="flex items-center mt-4">
+        <div className="text-sm text-gray-600">Goal Amount:&nbsp;</div>
         <div className={`text-sm font-bold ${goalStatusColor}`}>
         ${goalAmount ? goalAmount.toFixed(2) : "10500.00"} {/* Change later if you can*/}
-        </div>
-      </div>
-
-      {/* Portfolio Value */}
-      <div className="flex items-center justify-between mt-4">
-        <div className="text-sm text-gray-600">Portfolio Value:</div>
-        <div className={`text-sm font-bold ${goalStatusColor}`}>
-          ${totalPortfolioValue.toFixed(2)}
         </div>
       </div>
     </div>
