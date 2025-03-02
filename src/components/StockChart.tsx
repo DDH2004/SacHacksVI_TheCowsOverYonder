@@ -11,8 +11,7 @@ interface StockChartProps {
 const StockChart: React.FC<StockChartProps> = ({
   company,
   width = 300,
-  height = 150,
-  showVolume = false
+  height = 150
 }) => {
   const priceHistory = company.priceHistory;
   
