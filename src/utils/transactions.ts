@@ -1,136 +1,167 @@
+import { Portfolio, Company } from '../types';
 import { v4 as uuidv4 } from 'uuid';
-import { Company, Portfolio, Transaction } from '../types';
 
-// Execute a buy transaction
+interface TransactionResult {
+  success: boolean;
+  message?: string;
+  portfolio: Portfolio;
+}
+
 export const buyStock = (
   portfolio: Portfolio,
   company: Company,
   shares: number
-): { success: boolean; portfolio: Portfolio; message?: string } => {
-  // Calculate total cost
-  const totalCost = shares * company.currentPrice;
+): TransactionResult => {
+  // Validate the transaction
+  if (shares <= 0) {
+    return {
+      success: false,
+      message: 'Number of shares must be positive',
+      portfolio
+    };
+  }
+
+  const totalCost = company.currentPrice * shares;
   
-  // Check if user has enough cash
   if (totalCost > portfolio.cash) {
     return {
       success: false,
-      portfolio,
-      message: "Insufficient funds for this transaction."
+      message: 'Insufficient funds',
+      portfolio
     };
   }
+
+  // Create a deep copy of the portfolio
+  const updatedPortfolio = JSON.parse(JSON.stringify(portfolio)) as Portfolio;
   
-  // Create transaction record
-  const transaction: Transaction = {
-    id: uuidv4(),
-    companyId: company.id,
-    ticker: company.ticker,
-    shares,
-    pricePerShare: company.currentPrice,
-    timestamp: Date.now(),
-    type: 'buy',
-    total: totalCost
-  };
+  // Update cash
+  updatedPortfolio.cash -= totalCost;
   
-  // Update portfolio
-  const updatedHoldings = { ...portfolio.holdings };
+  // Update holdings
+  const companyId = company.id;
+  const existingHolding = updatedPortfolio.holdings[companyId];
   
-  if (updatedHoldings[company.id]) {
-    // Update existing holding
-    const currentHolding = updatedHoldings[company.id];
-    const totalShares = currentHolding.shares + shares;
-    const totalCostBasis = (currentHolding.shares * currentHolding.averagePurchasePrice) + totalCost;
+  if (existingHolding) {
+    // Calculate new average purchase price
+    const totalShares = existingHolding.shares + shares;
+    const totalInvestment = 
+      (existingHolding.shares * existingHolding.averagePurchasePrice) + 
+      (shares * company.currentPrice);
     
-    updatedHoldings[company.id] = {
+    updatedPortfolio.holdings[companyId] = {
       shares: totalShares,
-      averagePurchasePrice: totalCostBasis / totalShares
+      averagePurchasePrice: totalInvestment / totalShares
     };
   } else {
-    // Create new holding
-    updatedHoldings[company.id] = {
+    updatedPortfolio.holdings[companyId] = {
       shares,
       averagePurchasePrice: company.currentPrice
     };
   }
   
-  const updatedPortfolio: Portfolio = {
-    cash: portfolio.cash - totalCost,
-    holdings: updatedHoldings,
-    transactionHistory: [...portfolio.transactionHistory, transaction],
-    netWorth: portfolio.netWorth // This will be recalculated elsewhere
-  };
+  // Add transaction to history
+  updatedPortfolio.transactionHistory.push({
+    id: uuidv4(),
+    type: 'buy',
+    companyId: company.id,
+    companyName: company.name,
+    shares,
+    pricePerShare: company.currentPrice,
+    totalAmount: totalCost,
+    timestamp: Date.now()
+  });
+  
+  // Update net worth (should be the same since we're just converting cash to stock)
+  // But we'll recalculate to be safe
+  let stockValue = 0;
+  for (const [id, holding] of Object.entries(updatedPortfolio.holdings)) {
+    const companyPrice = company.id === id ? 
+      company.currentPrice : 
+      portfolio.holdings[id]?.averagePurchasePrice || 0;
+    
+    stockValue += holding.shares * companyPrice;
+  }
+  
+  updatedPortfolio.netWorth = updatedPortfolio.cash + stockValue;
   
   return {
     success: true,
-    portfolio: updatedPortfolio,
-    message: `Successfully purchased ${shares} shares of ${company.ticker} for $${totalCost.toFixed(2)}.`
+    portfolio: updatedPortfolio
   };
 };
 
-// Execute a sell transaction
 export const sellStock = (
   portfolio: Portfolio,
   company: Company,
   shares: number
-): { success: boolean; portfolio: Portfolio; message?: string } => {
-  // Check if user owns the stock
-  if (!portfolio.holdings[company.id]) {
+): TransactionResult => {
+  // Validate the transaction
+  if (shares <= 0) {
     return {
       success: false,
-      portfolio,
-      message: `You don't own any shares of ${company.ticker}.`
+      message: 'Number of shares must be positive',
+      portfolio
     };
   }
   
-  // Check if user owns enough shares
-  const currentShares = portfolio.holdings[company.id].shares;
-  if (shares > currentShares) {
+  const companyId = company.id;
+  const existingHolding = portfolio.holdings[companyId];
+  
+  if (!existingHolding || existingHolding.shares < shares) {
     return {
       success: false,
-      portfolio,
-      message: `You only own ${currentShares} shares of ${company.ticker}.`
+      message: 'Insufficient shares',
+      portfolio
     };
   }
   
-  // Calculate total value
-  const totalValue = shares * company.currentPrice;
+  // Create a deep copy of the portfolio
+  const updatedPortfolio = JSON.parse(JSON.stringify(portfolio)) as Portfolio;
   
-  // Create transaction record
-  const transaction: Transaction = {
-    id: uuidv4(),
-    companyId: company.id,
-    ticker: company.ticker,
-    shares: shares,
-    pricePerShare: company.currentPrice,
-    timestamp: Date.now(),
-    type: 'sell',
-    total: totalValue
-  };
+  // Calculate sale amount
+  const saleAmount = company.currentPrice * shares;
   
-  // Update portfolio
-  const updatedHoldings = { ...portfolio.holdings };
-  const remainingShares = currentShares - shares;
+  // Update cash
+  updatedPortfolio.cash += saleAmount;
   
-  if (remainingShares > 0) {
-    // Update existing holding
-    updatedHoldings[company.id] = {
-      ...updatedHoldings[company.id],
-      shares: remainingShares
-    };
+  // Update holdings
+  if (existingHolding.shares === shares) {
+    // Sold all shares
+    delete updatedPortfolio.holdings[companyId];
   } else {
-    // Remove holding completely
-    delete updatedHoldings[company.id];
+    // Sold some shares
+    updatedPortfolio.holdings[companyId] = {
+      ...existingHolding,
+      shares: existingHolding.shares - shares
+    };
   }
   
-  const updatedPortfolio: Portfolio = {
-    cash: portfolio.cash + totalValue,
-    holdings: updatedHoldings,
-    transactionHistory: [...portfolio.transactionHistory, transaction],
-    netWorth: portfolio.netWorth // This will be recalculated elsewhere
-  };
+  // Add transaction to history
+  updatedPortfolio.transactionHistory.push({
+    id: uuidv4(),
+    type: 'sell',
+    companyId: company.id,
+    companyName: company.name,
+    shares,
+    pricePerShare: company.currentPrice,
+    totalAmount: saleAmount,
+    timestamp: Date.now()
+  });
+  
+  // Update net worth
+  let stockValue = 0;
+  for (const [id, holding] of Object.entries(updatedPortfolio.holdings)) {
+    const companyPrice = company.id === id ? 
+      company.currentPrice : 
+      portfolio.holdings[id]?.averagePurchasePrice || 0;
+    
+    stockValue += holding.shares * companyPrice;
+  }
+  
+  updatedPortfolio.netWorth = updatedPortfolio.cash + stockValue;
   
   return {
     success: true,
-    portfolio: updatedPortfolio,
-    message: `Successfully sold ${shares} shares of ${company.ticker} for $${totalValue.toFixed(2)}.`
+    portfolio: updatedPortfolio
   };
 };

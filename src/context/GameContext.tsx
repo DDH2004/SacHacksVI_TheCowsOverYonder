@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
-import { GameState, Company, NewsEvent, Portfolio } from '../types';
+import { GameState, Company, NewsEvent, Portfolio, GameSpeed } from '../types';
 import { initialGameState } from '../data/initialData';
-import { advanceGameDay } from '../utils/marketSimulation';
+import { advanceGameDay, fetchGameState, updateGameState } from '../utils/marketSimulation';
 import { buyStock, sellStock } from '../utils/transactions';
 
 // Define action types
@@ -9,11 +9,10 @@ type GameAction =
   | { type: 'ADVANCE_DAY' }
   | { type: 'BUY_STOCK'; companyId: string; shares: number }
   | { type: 'SELL_STOCK'; companyId: string; shares: number }
-  | { type: 'SET_GAME_SPEED'; speed: GameState['gameSpeed'] }
+  | { type: 'SET_GAME_SPEED'; speed: GameSpeed }
   | { type: 'TOGGLE_PAUSE' }
   | { type: 'RESET_GAME' }
-  | { type: 'SET_GAME_STATE'; gameState: GameState }; // Action to set the full game state from the backend
-
+  | { type: 'SET_GAME_STATE'; gameState: GameState }; 
 
 // Create context
 interface GameContextType {
@@ -22,7 +21,7 @@ interface GameContextType {
   buyStockShares: (companyId: string, shares: number) => void;
   sellStockShares: (companyId: string, shares: number) => void;
   advanceDay: () => void;
-  setGameSpeed: (speed: GameState['gameSpeed']) => void;
+  setGameSpeed: (speed: GameSpeed) => void;
   togglePause: () => void;
   resetGame: () => void;
 }
@@ -33,7 +32,8 @@ const GameContext = createContext<GameContextType | undefined>(undefined);
 const gameReducer = (state: GameState, action: GameAction): GameState => {
   switch (action.type) {
     case 'ADVANCE_DAY':
-      return advanceGameDay(state);
+      // The actual state update will happen in the effect
+      return state;
       
     case 'BUY_STOCK': {
       const company = state.companies.find(c => c.id === action.companyId);
@@ -42,10 +42,15 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       const result = buyStock(state.portfolio, company, action.shares);
       if (!result.success) return state;
       
-      return {
+      const updatedState = {
         ...state,
         portfolio: result.portfolio
       };
+      
+      // Update the server with the new state
+      updateGameState(updatedState);
+      
+      return updatedState;
     }
     
     case 'SELL_STOCK': {
@@ -55,28 +60,48 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       const result = sellStock(state.portfolio, company, action.shares);
       if (!result.success) return state;
       
-      return {
+      const updatedState = {
         ...state,
         portfolio: result.portfolio
       };
+      
+      // Update the server with the new state
+      updateGameState(updatedState);
+      
+      return updatedState;
     }
     
-    case 'SET_GAME_SPEED':
-      return {
+    case 'SET_GAME_SPEED': {
+      const updatedState = {
         ...state,
         gameSpeed: action.speed
       };
       
-    case 'TOGGLE_PAUSE':
-      return {
+      // Update the server with the new state
+      updateGameState(updatedState);
+      
+      return updatedState;
+    }
+      
+    case 'TOGGLE_PAUSE': {
+      const updatedState = {
         ...state,
         isPaused: !state.isPaused
       };
       
-    case 'RESET_GAME':
+      // Update the server with the new state
+      updateGameState(updatedState);
+      
+      return updatedState;
+    }
+      
+    case 'RESET_GAME': {
+      // Reset to initial state and update the server
+      updateGameState(initialGameState);
       return initialGameState;
+    }
 
-    case 'SET_GAME_STATE': // New case to set the full game state
+    case 'SET_GAME_STATE':
       return action.gameState;
       
     default:
@@ -90,25 +115,26 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Fetch the game state from the backend when the app mounts
   useEffect(() => {
-    const fetchGameState = async () => {
-      try {
-        const response = await fetch('/api/gamestate');
-        if (response.ok) {
-          const data = await response.json();
-          dispatch({ type: 'SET_GAME_STATE', gameState: data }); // Update the state with the backend data
-        } else {
-          console.error('Failed to fetch game state from backend');
-        }
-      } catch (error) {
-        console.error('Error fetching game state:', error);
+    const getInitialGameState = async () => {
+      const gameState = await fetchGameState();
+      if (gameState) {
+        dispatch({ type: 'SET_GAME_STATE', gameState });
       }
     };
 
-    fetchGameState();
+    getInitialGameState();
   }, []);
   
-  // Game loop for automatic day advancement
+  // Effect for handling day advancement
   useEffect(() => {
+    const advanceDay = async () => {
+      const updatedState = await advanceGameDay(state);
+      if (updatedState) {
+        dispatch({ type: 'SET_GAME_STATE', gameState: updatedState });
+      }
+    };
+
+    // Game loop for automatic day advancement
     if (state.isPaused) return;
     
     let interval: number;
@@ -128,11 +154,11 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
     
     const timer = setInterval(() => {
-      dispatch({ type: 'ADVANCE_DAY' });
+      advanceDay();
     }, interval);
     
     return () => clearInterval(timer);
-  }, [state.gameSpeed, state.isPaused]);
+  }, [state.gameSpeed, state.isPaused, state]);
   
   // Helper functions
   const buyStockShares = (companyId: string, shares: number) => {
@@ -143,11 +169,14 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     dispatch({ type: 'SELL_STOCK', companyId, shares });
   };
   
-  const advanceDay = () => {
-    dispatch({ type: 'ADVANCE_DAY' });
+  const advanceDay = async () => {
+    const updatedState = await advanceGameDay(state);
+    if (updatedState) {
+      dispatch({ type: 'SET_GAME_STATE', gameState: updatedState });
+    }
   };
   
-  const setGameSpeed = (speed: GameState['gameSpeed']) => {
+  const setGameSpeed = (speed: GameSpeed) => {
     dispatch({ type: 'SET_GAME_SPEED', speed });
   };
   

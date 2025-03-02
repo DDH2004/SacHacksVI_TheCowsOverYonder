@@ -1,3 +1,5 @@
+export type GameSpeed = 'slow' | 'normal' | 'fast';
+
 export interface Company {
   id: string;
   name: string;
@@ -7,39 +9,46 @@ export interface Company {
   initialPrice: number;
   currentPrice: number;
   priceHistory: number[];
-  volatility: number; // 0-1 scale, higher means more volatile
+  volatility: number;
 }
 
 export interface NewsEvent {
   id: string;
   headline: string;
   body: string;
-  affectedCompanies: string[]; // Company IDs
-  sentiment: number; // -1 to 1 scale, negative to positive
+  affectedCompanies: string[];
+  sentiment: number;
+  timestamp: number;
+}
+
+export interface Holding {
+  shares: number;
+  averagePurchasePrice: number;
+}
+
+export interface Transaction {
+  id: string;
+  type: 'buy' | 'sell';
+  companyId: string;
+  companyName: string;
+  shares: number;
+  pricePerShare: number;
+  totalAmount: number;
   timestamp: number;
 }
 
 export interface Portfolio {
   cash: number;
-  holdings: {
-    [companyId: string]: {
-      shares: number;
-      averagePurchasePrice: number;
-    };
-  };
+  holdings: Record<string, Holding>;
   transactionHistory: Transaction[];
   netWorth: number;
 }
 
-export interface Transaction {
+export interface LeaderboardEntry {
   id: string;
-  companyId: string;
-  ticker: string;
-  shares: number;
-  pricePerShare: number;
-  timestamp: number;
-  type: 'buy' | 'sell';
-  total: number;
+  name: string;
+  netWorth: number;
+  day: number;
 }
 
 export interface GameState {
@@ -48,14 +57,7 @@ export interface GameState {
   news: NewsEvent[];
   portfolio: Portfolio;
   leaderboard: LeaderboardEntry[];
-  marketTrend: number; // -1 to 1 scale, bearish to bullish
-  gameSpeed: 'slow' | 'normal' | 'fast';
+  marketTrend: number;
+  gameSpeed: GameSpeed;
   isPaused: boolean;
-}
-
-export interface LeaderboardEntry {
-  id: string;
-  name: string;
-  netWorth: number;
-  dayReached: number;
 }
