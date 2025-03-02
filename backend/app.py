@@ -3,9 +3,15 @@ from flask_cors import CORS
 import uuid
 import random
 import time
+import copy
+import requests
+import os
 
 app = Flask(__name__)
 CORS(app)
+
+# Access the Gemini API key from the environment variable
+gemini_api_key = os.getenv('GEMINI_API_KEY')
 
 initialCompanies = [
     {
@@ -103,10 +109,10 @@ initialGameState = {
     "companies": initialCompanies,
     "news": [],
     "portfolio": {
-        "cash": 100000,
+        "cash": 10000,
         "holdings": {},
         "transactionHistory": [],
-        "netWorth": 100000
+        "netWorth": 10000
     },
     "leaderboard": [],
     "marketTrend": 0,
@@ -149,7 +155,7 @@ newsTemplates = {
     ]
 }
 
-gameState = initialGameState
+gameState = copy.deepcopy(initialGameState)
 
 def generate_news_body(headline):
     return f"{headline}. Analysts are closely watching how this development will impact the company's financial performance and market position in the coming quarters."
@@ -302,8 +308,9 @@ def sell_stock():
 @app.route('/api/reset', methods=['POST'])
 def reset_game():
     global gameState
-    gameState = initialGameState
-    return jsonify(gameState)
+    gameState = copy.deepcopy(initialGameState)
+    return jsonify(initialGameState)
 
 if __name__ == '__main__':
+    print(f"{gemini_api_key}")
     app.run(debug=True)

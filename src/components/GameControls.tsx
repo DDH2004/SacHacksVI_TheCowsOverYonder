@@ -56,7 +56,7 @@ const GameControls: React.FC = () => {
       <div className="flex items-center justify-between mt-4">
         <div className="text-sm text-gray-600">Goal Amount:</div>
         <div className={`text-sm font-bold ${goalStatusColor}`}>
-          ${goalAmount ? goalAmount.toFixed(2) : "100500.00"} {/* TODO: set foal amount to be variable */}
+        ${goalAmount ? goalAmount.toFixed(2) : "100500.00"} {/* Change later if you can*/}
         </div>
       </div>
 
