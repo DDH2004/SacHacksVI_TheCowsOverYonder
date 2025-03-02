@@ -1,11 +1,11 @@
-import React, { createContext, useContext, useReducer } from 'react';
+import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import axios from 'axios';
 import { GameState } from '../types';
 import { initialGameState } from '../data/initialData';
-import { advanceGameDay } from '../utils/marketSimulation';
-import { buyStock, sellStock } from '../utils/transactions';
 
 // Define action types
 type GameAction =
+  | { type: 'SET_GAME_STATE'; gameState: GameState }
   | { type: 'ADVANCE_DAY' }
   | { type: 'BUY_STOCK'; companyId: string; shares: number }
   | { type: 'SELL_STOCK'; companyId: string; shares: number }
@@ -26,43 +26,14 @@ const GameContext = createContext<GameContextType | undefined>(undefined);
 // Reducer function
 const gameReducer = (state: GameState, action: GameAction): GameState => {
   switch (action.type) {
+    case 'SET_GAME_STATE':
+      return action.gameState;
     case 'ADVANCE_DAY':
-      // Check if the player has won or lost
-      const totalPortfolioValue = state.portfolio.netWorth;
-
-      if (totalPortfolioValue >= state.goalAmount) {
-        alert('Congratulations! You reached your goal!');
-
-      } else if (state.daysUntilGoal - 1 <= 0) {
-        alert('You ran out of time! Better luck next time.');
-
-      }
-
-      return advanceGameDay(state);
-    case 'BUY_STOCK': {
-      const company = state.companies.find((c) => c.id === action.companyId);
-      if (!company) return state;
-
-      const result = buyStock(state.portfolio, company, action.shares);
-      if (!result.success) return state;
-
-      return {
-        ...state,
-        portfolio: result.portfolio,
-      };
-    }
-    case 'SELL_STOCK': {
-      const company = state.companies.find((c) => c.id === action.companyId);
-      if (!company) return state;
-
-      const result = sellStock(state.portfolio, company, action.shares);
-      if (!result.success) return state;
-
-      return {
-        ...state,
-        portfolio: result.portfolio,
-      };
-    }
+      return state; // No local state change, handled by API
+    case 'BUY_STOCK':
+      return state; // No local state change, handled by API
+    case 'SELL_STOCK':
+      return state; // No local state change, handled by API
     case 'RESET_GAME':
       return initialGameState;
     default:
@@ -77,21 +48,47 @@ export const GameProvider: React.FC<{ children: React.ReactNode; resetToMenu: ()
 }) => {
   const [state, dispatch] = useReducer(gameReducer, initialGameState);
 
+  // Fetch initial game state from backend
+  useEffect(() => {
+    axios.get('/api/gamestate')
+      .then(response => {
+        dispatch({ type: 'SET_GAME_STATE', gameState: response.data });
+      })
+      .catch(error => console.error('Error fetching game state:', error));
+  }, []);
+
+  // Helper functions
   const buyStockShares = (companyId: string, shares: number) => {
-    dispatch({ type: 'BUY_STOCK', companyId, shares });
+    axios.post('/api/buy', { companyId, shares })
+      .then(response => {
+        dispatch({ type: 'SET_GAME_STATE', gameState: response.data });
+      })
+      .catch(error => console.error('Error buying stock:', error));
   };
 
   const sellStockShares = (companyId: string, shares: number) => {
-    dispatch({ type: 'SELL_STOCK', companyId, shares });
+    axios.post('/api/sell', { companyId, shares })
+      .then(response => {
+        dispatch({ type: 'SET_GAME_STATE', gameState: response.data });
+      })
+      .catch(error => console.error('Error selling stock:', error));
   };
 
   const advanceDay = () => {
-    dispatch({ type: 'ADVANCE_DAY' });
+    axios.post('/api/advance-day')
+      .then(response => {
+        dispatch({ type: 'SET_GAME_STATE', gameState: response.data });
+      })
+      .catch(error => console.error('Error advancing day:', error));
   };
 
   const resetGame = () => {
-    dispatch({ type: 'RESET_GAME' });
-    resetToMenu(); // Trigger return to Start Menu
+    axios.post('/api/reset')
+      .then(response => {
+        dispatch({ type: 'SET_GAME_STATE', gameState: response.data });
+        resetToMenu(); // Trigger return to Start Menu
+      })
+      .catch(error => console.error('Error resetting game:', error));
   };
 
   return (
