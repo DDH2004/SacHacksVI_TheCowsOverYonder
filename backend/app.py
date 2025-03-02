@@ -151,7 +151,7 @@ newsTemplates = {
 gameState = initialGameState
 
 def generate_news_body(headline):
-    return f"{headline}. Analysts are closely watching how this development will impact the company's financial performance and market position in the coming quarters."
+    return f"{headline}.  I love Test-ocles"
 
 def generate_news_events(companies):
     MAX_NEWS_PER_DAY = 3

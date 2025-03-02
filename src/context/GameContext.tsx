@@ -11,7 +11,9 @@ type GameAction =
   | { type: 'SELL_STOCK'; companyId: string; shares: number }
   | { type: 'SET_GAME_SPEED'; speed: GameState['gameSpeed'] }
   | { type: 'TOGGLE_PAUSE' }
-  | { type: 'RESET_GAME' };
+  | { type: 'RESET_GAME' }
+  | { type: 'SET_GAME_STATE'; gameState: GameState }; // Action to set the full game state from the backend
+
 
 // Create context
 interface GameContextType {
@@ -73,6 +75,9 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       
     case 'RESET_GAME':
       return initialGameState;
+
+    case 'SET_GAME_STATE': // New case to set the full game state
+      return action.gameState;
       
     default:
       return state;
@@ -82,6 +87,25 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
 // Provider component
 export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(gameReducer, initialGameState);
+
+  // Fetch the game state from the backend when the app mounts
+  useEffect(() => {
+    const fetchGameState = async () => {
+      try {
+        const response = await fetch('/api/gamestate');
+        if (response.ok) {
+          const data = await response.json();
+          dispatch({ type: 'SET_GAME_STATE', gameState: data }); // Update the state with the backend data
+        } else {
+          console.error('Failed to fetch game state from backend');
+        }
+      } catch (error) {
+        console.error('Error fetching game state:', error);
+      }
+    };
+
+    fetchGameState();
+  }, []);
   
   // Game loop for automatic day advancement
   useEffect(() => {

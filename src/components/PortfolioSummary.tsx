@@ -41,13 +41,13 @@ const PortfolioSummary: React.FC = () => {
     <div className="bg-white rounded-lg shadow-md p-4">
       <h2 className="text-xl font-bold mb-4">Portfolio Summary</h2>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
         <div className="bg-blue-50 p-4 rounded-lg flex flex-col items-center justify-between">
           <div className="flex items-center text-blue-700 mb-1">
             <Wallet size={20} className="mr-2" />
             <span className="text-sm font-medium">Cash</span>
           </div>
-          <div className="text-xl font-bold">${portfolio.cash.toFixed(2)}</div>
+          <div className="text-xl sm:text-lg font-bold">${portfolio.cash.toFixed(2)}</div>
         </div>
         
         <div className="bg-purple-50 p-4 rounded-lg flex flex-col items-center justify-between">
@@ -55,7 +55,7 @@ const PortfolioSummary: React.FC = () => {
             <BarChart3 size={20} className="mr-2" />
             <span className="text-sm font-medium">Net&nbsp;Worth</span>
           </div>
-          <div className="text-xl font-bold">${totalValue.toFixed(2)}</div>
+          <div className="text-xl sm:text-lg font-bold">${totalValue.toFixed(2)}</div>
         </div>
         
         <div className={`${profitLoss >= 0 ? 'bg-green-50' : 'bg-red-50'} p-4 rounded-lg flex flex-col items-center justify-between`}>
@@ -67,7 +67,7 @@ const PortfolioSummary: React.FC = () => {
             )}
             <span className="text-sm font-medium">Profit/Loss</span>
           </div>
-          <div className="text-xl font-bold">
+          <div className="text-xl sm:text-lg font-bold">
             {profitLoss >= 0 ? '+' : ''}${profitLoss.toFixed(2)} ({profitLossPercent.toFixed(2)}%)
           </div>
         </div>
@@ -105,7 +105,7 @@ const PortfolioSummary: React.FC = () => {
                       ) : (
                         <TrendingDown size={16} className="mr-1" />
                       )}
-                      <span>
+                      <span className="text-xs">
                         {holding.profit >= 0 ? '+' : ''}${holding.profit.toFixed(2)} ({holding.profitPercent.toFixed(2)}%)
                       </span>
                     </div>
